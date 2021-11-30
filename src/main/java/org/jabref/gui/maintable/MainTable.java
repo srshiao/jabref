@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -30,6 +31,7 @@ import org.jabref.gui.Globals;
 import org.jabref.gui.LibraryTab;
 import org.jabref.gui.StateManager;
 import org.jabref.gui.actions.StandardActions;
+import org.jabref.gui.actions.NavigateAction;
 import org.jabref.gui.edit.EditAction;
 import org.jabref.gui.externalfiles.ImportHandler;
 import org.jabref.gui.externalfiletype.ExternalFileTypes;
@@ -56,6 +58,7 @@ import org.slf4j.LoggerFactory;
 public class MainTable extends TableView<BibEntryTableViewModel> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MainTable.class);
+    private static final int MAX_BACK_HISTORY_SIZE = 10;
 
     private final LibraryTab libraryTab;
     private final DialogService dialogService;
@@ -67,6 +70,13 @@ public class MainTable extends TableView<BibEntryTableViewModel> {
 
     private long lastKeyPressTime;
     private String columnSearchTerm;
+
+    private final List<BibEntry> previousEntries = new ArrayList<>();
+    private final List<BibEntry> nextEntries = new ArrayList<>();
+    private BibEntry showing;
+    // Variable to prevent erroneous update of back/forward histories at the time
+    // when a Back or Forward operation is being processed:
+    private boolean backOrForwardInProgress;
 
     public MainTable(MainTableDataModel model,
                      LibraryTab libraryTab,
@@ -110,6 +120,7 @@ public class MainTable extends TableView<BibEntryTableViewModel> {
                 .withOnMouseClickedEvent((entry, event) -> {
                     if (event.getClickCount() == 2) {
                         libraryTab.showAndEdit(entry.getEntry());
+                        newEntryShowing(entry.getEntry());
                     }
                 })
                 .withContextMenu(entry -> RightClickMenu.create(entry,
@@ -280,6 +291,14 @@ public class MainTable extends TableView<BibEntryTableViewModel> {
                         new EditAction(StandardActions.DELETE_ENTRY, libraryTab.frame(), Globals.stateManager).execute();
                         event.consume();
                         break;
+                    case BACK:
+                        new NavigateAction(StandardActions.BACK, libraryTab.frame(), Globals.stateManager).execute();
+                        event.consume();
+                        break;
+                    case FORWARD:
+                        new NavigateAction(StandardActions.FORWARD, libraryTab.frame(), Globals.stateManager).execute();
+                        event.consume();
+                        break;
                     default:
                         // Pass other keys to parent
                 }
@@ -297,6 +316,61 @@ public class MainTable extends TableView<BibEntryTableViewModel> {
         getSelectionModel().clearSelection();
         getSelectionModel().selectLast();
         scrollTo(getItems().size() - 1);
+    }
+
+    /**
+     * Update the pointer to the currently shown entry in all cases where the user has moved to a new entry, except when
+     * using Back and Forward commands. Also updates history for Back command, and clears history for Forward command.
+     *
+     * @param entry The entry that is now to be shown.
+     */
+    private void newEntryShowing(BibEntry entry) {
+
+        // If this call is the result of a Back or Forward operation, we must take
+        // care not to make any history changes, since the necessary changes will
+        // already have been done in the back() or forward() method:
+        if (backOrForwardInProgress) {
+            showing = entry;
+            backOrForwardInProgress = false;
+            return;
+        }
+        nextEntries.clear();
+        if (!Objects.equals(entry, showing)) {
+            // Add the entry we are leaving to the history:
+            if (showing != null) {
+                previousEntries.add(showing);
+                if (previousEntries.size() > MAX_BACK_HISTORY_SIZE) {
+                    previousEntries.remove(0);
+                }
+            }
+            showing = entry;
+        }
+    }
+
+    private void back() {
+        if (!previousEntries.isEmpty()) {
+            BibEntry toShow = previousEntries.get(previousEntries.size() - 1);
+            previousEntries.remove(previousEntries.size() - 1);
+            // Add the entry we are going back from to the Forward history:
+            if (showing != null) {
+                nextEntries.add(showing);
+            }
+            backOrForwardInProgress = true; // to avoid the history getting updated erroneously
+            clearAndSelect(toShow);
+        }
+    }
+
+    private void forward() {
+        if (!nextEntries.isEmpty()) {
+            BibEntry toShow = nextEntries.get(nextEntries.size() - 1);
+            nextEntries.remove(nextEntries.size() - 1);
+            // Add the entry we are going forward from to the Back history:
+            if (showing != null) {
+                previousEntries.add(showing);
+            }
+            backOrForwardInProgress = true; // to avoid the history getting updated erroneously
+            clearAndSelect(toShow);
+        }
     }
 
     public void paste(BibDatabaseMode bibDatabaseMode) {
