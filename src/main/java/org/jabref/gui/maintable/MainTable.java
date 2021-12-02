@@ -294,10 +294,12 @@ public class MainTable extends TableView<BibEntryTableViewModel> {
                     case BACK:
                         new NavigateAction(StandardActions.BACK, libraryTab.frame(), Globals.stateManager).execute();
                         event.consume();
+                        back();
                         break;
                     case FORWARD:
                         new NavigateAction(StandardActions.FORWARD, libraryTab.frame(), Globals.stateManager).execute();
                         event.consume();
+                        forward();
                         break;
                     default:
                         // Pass other keys to parent
@@ -326,6 +328,7 @@ public class MainTable extends TableView<BibEntryTableViewModel> {
      */
     private void newEntryShowing(BibEntry entry) {
 
+        LOGGER.info("newEntryShowing() called");
         // If this call is the result of a Back or Forward operation, we must take
         // care not to make any history changes, since the necessary changes will
         // already have been done in the back() or forward() method:
@@ -348,6 +351,7 @@ public class MainTable extends TableView<BibEntryTableViewModel> {
     }
 
     private void back() {
+        LOGGER.info("back() called");
         if (!previousEntries.isEmpty()) {
             BibEntry toShow = previousEntries.get(previousEntries.size() - 1);
             previousEntries.remove(previousEntries.size() - 1);
@@ -361,6 +365,7 @@ public class MainTable extends TableView<BibEntryTableViewModel> {
     }
 
     private void forward() {
+        LOGGER.info("forward() called");
         if (!nextEntries.isEmpty()) {
             BibEntry toShow = nextEntries.get(nextEntries.size() - 1);
             nextEntries.remove(nextEntries.size() - 1);
