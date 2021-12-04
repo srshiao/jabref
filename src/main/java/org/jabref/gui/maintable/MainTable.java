@@ -349,6 +349,18 @@ public class MainTable extends TableView<BibEntryTableViewModel> {
             showing = entry;
         }
     }
+    /**
+    * This function is called when the user decides to backtrack and see what data was previously selected. 
+    * 
+    * This method keeps track of the entries in a BibEntry object and recalls the most recent 
+    *  entry when prompted by the keyboard commands. Once the recent entry is selected, that
+    *  entry is then deleted so it will not be repeated in the list. 
+    * Function also updates new entries onto the list.
+    *
+    * @param  none
+    * @return none
+    * 
+    */ 
 
     private void back() {
         LOGGER.info("back() called");
@@ -363,7 +375,18 @@ public class MainTable extends TableView<BibEntryTableViewModel> {
             clearAndSelect(toShow);
         }
     }
-
+    /**
+    * This function is called when the user decides to show the next entry and see what data was selected. 
+    * before they decided to go back.
+    * This method keeps track of the entries in a BibEntry object and recalls the next entry
+    *  entry when prompted by the keyboard commands. Once the recent entry is selected, that
+    *  entry is then deleted so it will not be repeated in the list. 
+    * Function also updates new entries onto the list.
+    *
+    * @param  none
+    * @return none
+    * 
+    */ 
     private void forward() {
         LOGGER.info("forward() called");
         if (!nextEntries.isEmpty()) {
