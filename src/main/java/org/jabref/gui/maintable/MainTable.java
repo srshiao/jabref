@@ -252,6 +252,16 @@ public class MainTable extends TableView<BibEntryTableViewModel> {
         libraryTab.delete(true);
     }
 
+    /**
+    * This function connects the KeyBindings made into actions
+    * we want the function to do when the key is pressed.
+    *
+    * @param  KeyBindingRepository keyBindings
+    * @return none
+    * 
+    */ 
+    // CS427 Issue link: https://github.com/JabRef/jabref/issues/7535
+
     private void setupKeyBindings(KeyBindingRepository keyBindings) {
         this.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
             if (event.getCode() == KeyCode.ENTER) {
@@ -291,11 +301,13 @@ public class MainTable extends TableView<BibEntryTableViewModel> {
                         new EditAction(StandardActions.DELETE_ENTRY, libraryTab.frame(), Globals.stateManager).execute();
                         event.consume();
                         break;
+                    // CS427 Issue link: https://github.com/JabRef/jabref/issues/7535
                     case BACK:
                         new NavigateAction(StandardActions.BACK, libraryTab.frame(), Globals.stateManager).execute();
                         event.consume();
                         back();
                         break;
+                    // CS427 Issue link: https://github.com/JabRef/jabref/issues/7535
                     case FORWARD:
                         new NavigateAction(StandardActions.FORWARD, libraryTab.frame(), Globals.stateManager).execute();
                         event.consume();
@@ -361,7 +373,8 @@ public class MainTable extends TableView<BibEntryTableViewModel> {
     * @return none
     * 
     */ 
-
+    // CS427 Issue link: https://github.com/JabRef/jabref/issues/7535
+    
     private void back() {
         LOGGER.info("back() called");
         if (!previousEntries.isEmpty()) {
@@ -387,6 +400,8 @@ public class MainTable extends TableView<BibEntryTableViewModel> {
     * @return none
     * 
     */ 
+    // CS427 Issue link: https://github.com/JabRef/jabref/issues/7535
+    
     private void forward() {
         LOGGER.info("forward() called");
         if (!nextEntries.isEmpty()) {
